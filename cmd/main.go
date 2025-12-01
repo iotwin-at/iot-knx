@@ -42,13 +42,66 @@ LP1:
 				}
 			}
 
-			if msg.Result.DestAddr.Main == 0 && msg.Result.DestAddr.Middle == 0 && (msg.Result.DestAddr.Sub == 11 || msg.Result.DestAddr.Sub == 12 || msg.Result.DestAddr.Sub == 13 || msg.Result.DestAddr.Sub == 14 || msg.Result.DestAddr.Sub == 15) {
-				value, err := dpt.UnpackDpt9001(msg.Result.Data)
-				if err != nil {
-					logger.Errorf("failed to parse value")
+			if msg.Result.DestAddr.Main == 0 && msg.Result.DestAddr.Middle == 0 {
+				// CO2
+				if msg.Result.DestAddr.Sub == 10 {
+					value, err := dpt.UnpackDpt9008(msg.Result.Data)
+					if err != nil {
+						logger.Errorf("%v", err)
 
-				} else {
-					logger.Infof("  → DPT 9.001 (Temp): %v%s", value, value.Unit())
+					} else {
+						logger.Infof("  → %s: %v", value.Name(), value)
+					}
+				}
+				// Relative Luftfeuchtigkeit
+				if msg.Result.DestAddr.Sub == 11 {
+					value, err := dpt.UnpackDpt9007(msg.Result.Data)
+					if err != nil {
+						logger.Errorf("%v", err)
+
+					} else {
+						logger.Infof("  → %s: %v", value.Name(), value)
+					}
+				}
+				// Temperatur
+				if msg.Result.DestAddr.Sub == 12 {
+					value, err := dpt.UnpackDpt9001(msg.Result.Data)
+					if err != nil {
+						logger.Errorf("%v", err)
+
+					} else {
+						logger.Infof("  → %s: %v", value.Name(), value)
+					}
+				}
+				// Taupunkt
+				if msg.Result.DestAddr.Sub == 13 {
+					value, err := dpt.UnpackDpt9001(msg.Result.Data)
+					if err != nil {
+						logger.Errorf("%v", err)
+
+					} else {
+						logger.Infof("  → %s: %v", value.Name(), value)
+					}
+				}
+				// Luftfeuchte Absolut
+				if msg.Result.DestAddr.Sub == 14 {
+					value, err := dpt.UnpackDpt9006(msg.Result.Data)
+					if err != nil {
+						logger.Errorf("%v", err)
+
+					} else {
+						logger.Infof("  → %s: %v", value.Name(), value)
+					}
+				}
+				// Luftfeuchte Relativ
+				if msg.Result.DestAddr.Sub == 15 {
+					value, err := dpt.UnpackDpt9006(msg.Result.Data)
+					if err != nil {
+						logger.Errorf("%v", err)
+
+					} else {
+						logger.Infof("  → %s: %v", value.Name(), value)
+					}
 				}
 			}
 		}

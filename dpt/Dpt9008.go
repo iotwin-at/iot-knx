@@ -1,5 +1,7 @@
 package dpt
 
+import "fmt"
+
 type Dpt9008 F16
 
 // Value implements IDpt.
@@ -14,7 +16,7 @@ func (d Dpt9008) Name() string {
 
 // String implements IDpt.
 func (d Dpt9008) String() string {
-	return F16(d).String()
+	return fmt.Sprintf("%v%s", F16(d), d.Unit())
 }
 
 // ToBytes implements IDpt.

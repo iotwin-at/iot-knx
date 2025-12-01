@@ -16,7 +16,7 @@ func (d Dpt5001) Name() string {
 
 // String implements IDpt.
 func (d Dpt5001) String() string {
-	return fmt.Sprintf("%.2f%%", float32(d))
+	return fmt.Sprintf("%.2f%%%s", float32(d), d.Unit())
 }
 
 // ToBytes implements IDpt.
