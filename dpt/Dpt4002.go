@@ -14,7 +14,7 @@ func (d Dpt4002) Name() string {
 
 // String implements IDpt.
 func (d Dpt4002) String() string {
-	return string(rune(d))
+	return A8(d).String()
 }
 
 // ToBytes implements IDpt.

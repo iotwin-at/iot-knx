@@ -14,13 +14,7 @@ func (d Dpt2007) Name() string {
 
 // String implements IDpt.
 func (d Dpt2007) String() string {
-	if !d.C {
-		return "No control"
-	}
-	if !d.V {
-		return "Control. Function value 0"
-	}
-	return "Control. Function value 1"
+	return B2(d).String()
 }
 
 // ToBytes implements IDpt.
