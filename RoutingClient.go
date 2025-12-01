@@ -15,10 +15,10 @@ type RoutingClient struct {
 	multicastAddr string
 	retryInterval time.Duration
 
-	conn *net.UDPConn
-	subs map[async.Stream[Cemi]]bool
-	mux  sync.RWMutex
-	cmux sync.RWMutex
+	conn    *net.UDPConn
+	subs    map[async.Stream[Cemi]]bool
+	subMux  sync.RWMutex
+	connMux sync.RWMutex
 }
 
 // ------------------------------------------------------------------------------------
@@ -37,8 +37,8 @@ func (r *RoutingClient) Search(ctx context.Context, req SearchRequest) <-chan as
 
 // Send implements IClient.
 func (r *RoutingClient) Send(ctx context.Context, command GroupCommand) error {
-	r.cmux.RLock()
-	defer r.cmux.RUnlock()
+	r.connMux.RLock()
+	defer r.connMux.RUnlock()
 	if r.conn == nil {
 		return NewErrNetConnection("no udp connection available")
 	}
@@ -48,8 +48,8 @@ func (r *RoutingClient) Send(ctx context.Context, command GroupCommand) error {
 
 // Subscribe implements IClient.
 func (r *RoutingClient) Subscribe() async.Stream[Cemi] {
-	r.mux.Lock()
-	defer r.mux.Unlock()
+	r.subMux.Lock()
+	defer r.subMux.Unlock()
 	sub := async.NewStream[Cemi]()
 	r.subs[sub] = true
 	return sub
@@ -57,8 +57,8 @@ func (r *RoutingClient) Subscribe() async.Stream[Cemi] {
 
 // Unsubscribe implements IClient.
 func (r *RoutingClient) Unsubscribe(sub async.Stream[Cemi]) {
-	r.mux.Lock()
-	defer r.mux.Unlock()
+	r.subMux.Lock()
+	defer r.subMux.Unlock()
 	delete(r.subs, sub)
 }
 
@@ -91,8 +91,8 @@ func readUdp(mux *sync.RWMutex, conn *net.UDPConn) async.Stream[[]byte] {
 }
 
 func (k *RoutingClient) notify(p Cemi) {
-	k.mux.RLock()
-	defer k.mux.RUnlock()
+	k.subMux.RLock()
+	defer k.subMux.RUnlock()
 	for sub := range k.subs {
 		sub <- async.ActionResult[Cemi]{
 			Result: p,
@@ -114,12 +114,12 @@ func (k *RoutingClient) run(ctx context.Context) error {
 	}
 	defer func() {
 		k.conn.Close()
-		k.cmux.Lock()
+		k.connMux.Lock()
 		k.conn = nil
-		k.cmux.Unlock()
+		k.connMux.Unlock()
 	}()
 	// Create Reader
-	reader := readUdp(&k.cmux, k.conn)
+	reader := readUdp(&k.connMux, k.conn)
 	// Run
 	for {
 		select {
