@@ -18,7 +18,7 @@ type DateTime struct {
 }
 
 func (d DateTime) String() string {
-	return ""
+	return d.Format(time.RFC3339)
 }
 
 func (d DateTime) Pack() []byte {

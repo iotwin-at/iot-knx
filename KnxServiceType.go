@@ -29,7 +29,7 @@ type SearchRequest struct {
 	// TODO: Implement SearchRequest
 }
 
-func (r *SearchRequest) ToBytes() []byte {
+func (r *SearchRequest) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -44,7 +44,7 @@ type SearchResponse struct {
 	// TODO: Implement SearchResponse
 }
 
-func (r *SearchResponse) ToBytes() []byte {
+func (r *SearchResponse) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -59,7 +59,7 @@ type DescriptionRequest struct {
 	// TODO: Implement Description Request
 }
 
-func (r *DescriptionRequest) ToBytes() []byte {
+func (r *DescriptionRequest) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -74,7 +74,7 @@ type DescriptionResponse struct {
 	// TODO: Implement Description Response
 }
 
-func (r *DescriptionResponse) ToBytes() []byte {
+func (r *DescriptionResponse) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -89,7 +89,7 @@ type ConnectRequest struct {
 	// TODO: Connect Request
 }
 
-func (r *ConnectRequest) ToBytes() []byte {
+func (r *ConnectRequest) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -104,7 +104,7 @@ type ConnectResponse struct {
 	// TODO: Implement Connect Response
 }
 
-func (r *ConnectResponse) ToBytes() []byte {
+func (r *ConnectResponse) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -119,7 +119,7 @@ type ConnectionStateRequest struct {
 	// TODO: Implement Connection State Request
 }
 
-func (r *ConnectionStateRequest) ToBytes() []byte {
+func (r *ConnectionStateRequest) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -134,7 +134,7 @@ type ConnectionStateResponse struct {
 	// TODO: Implement Connection State Response
 }
 
-func (r *ConnectionStateResponse) ToBytes() []byte {
+func (r *ConnectionStateResponse) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -149,7 +149,7 @@ type DisconnectRequest struct {
 	// TODO: Implement Disconnect Request
 }
 
-func (r *DisconnectRequest) ToBytes() []byte {
+func (r *DisconnectRequest) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -164,7 +164,7 @@ type DisconnectResponse struct {
 	// TODO: Implement Disconnect Response
 }
 
-func (r *DisconnectResponse) ToBytes() []byte {
+func (r *DisconnectResponse) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -179,7 +179,7 @@ type TunnellingRequest struct {
 	// TODO: Implement Tunnelling Request
 }
 
-func (r *TunnellingRequest) ToBytes() []byte {
+func (r *TunnellingRequest) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -194,7 +194,7 @@ type TunnellingAck struct {
 	// TODO: Implement Tunneling Response
 }
 
-func (r *TunnellingAck) ToBytes() []byte {
+func (r *TunnellingAck) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -209,8 +209,8 @@ type RoutingIndication struct {
 	Cemi
 }
 
-func (r *RoutingIndication) ToBytes() []byte {
-	return r.Cemi.ToBytes()
+func (r *RoutingIndication) Pack() []byte {
+	return r.Cemi.Pack()
 }
 
 func parseRoutingIndication(data []byte) (*RoutingIndication, error) {
@@ -230,7 +230,7 @@ type RoutingLostMessage struct {
 	// TODO: Implement Routing Lost Message
 }
 
-func (r *RoutingLostMessage) ToBytes() []byte {
+func (r *RoutingLostMessage) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -245,7 +245,7 @@ type RoutingBusy struct {
 	// TODO: Implement Routing Busy Message
 }
 
-func (r *RoutingBusy) ToBytes() []byte {
+func (r *RoutingBusy) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -260,7 +260,7 @@ type DeviceConfigurationRequest struct {
 	// TODO: Implement Device Configuration Request
 }
 
-func (r *DeviceConfigurationRequest) ToBytes() []byte {
+func (r *DeviceConfigurationRequest) Pack() []byte {
 	panic("not implemented")
 }
 
@@ -275,7 +275,7 @@ type DeviceConfigurationAck struct {
 	// TODO: Implment Device Configuration Ack
 }
 
-func (r *DeviceConfigurationAck) ToBytes() []byte {
+func (r *DeviceConfigurationAck) Pack() []byte {
 	panic("not implemented")
 }
 

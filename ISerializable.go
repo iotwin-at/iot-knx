@@ -1,5 +1,5 @@
 package knx
 
 type ISerializable interface {
-	ToBytes() []byte
+	Pack() []byte
 }

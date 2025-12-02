@@ -15,7 +15,7 @@ type DestAddr struct {
 	Sub    uint16
 }
 
-func (d *DestAddr) ToBytes() []byte {
+func (d *DestAddr) Pack() []byte {
 	rawDest := (d.Main&0x1F)<<11 |
 		(d.Middle&0x07)<<8 |
 		(d.Sub & 0xFF)
@@ -46,7 +46,7 @@ type SrcAddr struct {
 	Device uint16
 }
 
-func (s *SrcAddr) ToBytes() []byte {
+func (s *SrcAddr) Pack() []byte {
 	rawSrc := (s.Area&0x0F)<<12 |
 		(s.Line&0x0F)<<8 |
 		(s.Device & 0xFF)
@@ -85,7 +85,7 @@ type Cemi struct {
 	Data              []byte // The actual payload data
 }
 
-func (c *Cemi) ToBytes() []byte {
+func (c *Cemi) Pack() []byte {
 	// Calculate total frame size
 	// 2 (MessageCode + AdditionalInfoLen) + AdditionalInfo + 9 (core fields) + Data
 	coreSize := 2 + int(c.AdditionalInfoLen) + 9
@@ -120,11 +120,11 @@ func (c *Cemi) ToBytes() []byte {
 	result[offset+1] = c.ControlField2
 
 	// Offset N+2 to N+3: Source Address (using SrcAddr.ToBytes())
-	srcBytes := c.SourceAddr.ToBytes()
+	srcBytes := c.SourceAddr.Pack()
 	copy(result[offset+2:offset+4], srcBytes)
 
 	// Offset N+4 to N+5: Destination Address (using DestAddr.ToBytes())
-	destBytes := c.DestAddr.ToBytes()
+	destBytes := c.DestAddr.Pack()
 	copy(result[offset+4:offset+6], destBytes)
 
 	// Offset N+6: Data Length

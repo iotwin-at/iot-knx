@@ -5,9 +5,9 @@ type KnxNetIpPackage[T ISerializable] struct {
 	Body   T
 }
 
-func (k *KnxNetIpPackage[T]) ToBytes() []byte {
-	header := k.Header.ToBytes()
-	body := k.Body.ToBytes()
+func (k *KnxNetIpPackage[T]) Pack() []byte {
+	header := k.Header.Pack()
+	body := k.Body.Pack()
 	result := make([]byte, len(header)+len(body))
 	copy(result[0:6], header)
 	copy(result[6:], body)

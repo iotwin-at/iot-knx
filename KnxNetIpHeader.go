@@ -9,7 +9,7 @@ type KnxNetIpHeader struct {
 	TotalLength     uint16
 }
 
-func (k *KnxNetIpHeader) ToBytes() []byte {
+func (k *KnxNetIpHeader) Pack() []byte {
 	result := make([]byte, 6)
 	result[0] = k.HeaderLength
 	result[1] = k.ProtocolVersion
