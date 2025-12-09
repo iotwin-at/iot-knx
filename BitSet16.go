@@ -9,7 +9,7 @@ func (b BitSet16) String() string {
 }
 
 func (b BitSet16) Pack() []byte {
-	result := []byte{0}
+	result := make([]byte, 2)
 	bIdx := -1
 	for i := 0; i < 16; i++ {
 		if i%8 == 0 {
@@ -23,7 +23,7 @@ func (b BitSet16) Pack() []byte {
 }
 
 func NewBitSet16(data []byte) (BitSet16, error) {
-	if len(data) != 1 {
+	if len(data) != 2 {
 		return BitSet16{}, NewErrInvalidDataType("given data cannot be unpacked to BitSet16 value")
 	}
 	result := BitSet16{}
