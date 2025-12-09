@@ -120,6 +120,7 @@ func (k *RoutingClient) run(ctx context.Context) error {
 	}()
 	// Create Reader
 	reader := readUdp(&k.connMux, k.conn)
+	k.logger.Debugf("KnxRoutingClient(%s) listening...", k.multicastAddr)
 	// Run
 	for {
 		select {
