@@ -2,21 +2,20 @@ package knx
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"sync"
 	"time"
 
-	"github.com/uoul/go-common/async"
-	"github.com/uoul/go-common/log"
+	"github.com/uoul/go-async"
 )
 
 type RoutingClient struct {
-	logger        log.ILogger
 	multicastAddr string
 	retryInterval time.Duration
 
 	conn    *net.UDPConn
-	subs    map[async.Stream[Cemi]]bool
+	subs    map[async.Sequence[Cemi]]bool
 	subMux  sync.RWMutex
 	connMux sync.RWMutex
 }
@@ -26,12 +25,12 @@ type RoutingClient struct {
 // ------------------------------------------------------------------------------------
 
 // Describe implements IClient.
-func (r *RoutingClient) Describe(ctx context.Context, req DescriptionRequest) <-chan async.ActionResult[KnxNetIpPackage[*DescriptionResponse]] {
+func (r *RoutingClient) Describe(ctx context.Context, req DescriptionRequest) async.Result[KnxNetIpPackage[*DescriptionResponse]] {
 	panic("unimplemented")
 }
 
 // Search implements IClient.
-func (r *RoutingClient) Search(ctx context.Context, req SearchRequest) <-chan async.ActionResult[KnxNetIpPackage[*SearchResponse]] {
+func (r *RoutingClient) Search(ctx context.Context, req SearchRequest) async.Result[KnxNetIpPackage[*SearchResponse]] {
 	panic("unimplemented")
 }
 
@@ -47,16 +46,16 @@ func (r *RoutingClient) Send(ctx context.Context, command GroupCommand) error {
 }
 
 // Subscribe implements IClient.
-func (r *RoutingClient) Subscribe() async.Stream[Cemi] {
+func (r *RoutingClient) Subscribe() async.Sequence[Cemi] {
 	r.subMux.Lock()
 	defer r.subMux.Unlock()
-	sub := async.NewStream[Cemi]()
+	sub := make(async.Sequence[Cemi])
 	r.subs[sub] = true
 	return sub
 }
 
 // Unsubscribe implements IClient.
-func (r *RoutingClient) Unsubscribe(sub async.Stream[Cemi]) {
+func (r *RoutingClient) Unsubscribe(sub async.Sequence[Cemi]) {
 	r.subMux.Lock()
 	defer r.subMux.Unlock()
 	delete(r.subs, sub)
@@ -66,8 +65,8 @@ func (r *RoutingClient) Unsubscribe(sub async.Stream[Cemi]) {
 // Private
 // ------------------------------------------------------------------------------------
 
-func readUdp(mux *sync.RWMutex, conn *net.UDPConn) async.Stream[[]byte] {
-	ch := async.NewStream[[]byte]()
+func readUdp(mux *sync.RWMutex, conn *net.UDPConn) async.Sequence[[]byte] {
+	ch := make(async.Sequence[[]byte])
 	go func() {
 		defer close(ch)
 		for {
@@ -76,15 +75,10 @@ func readUdp(mux *sync.RWMutex, conn *net.UDPConn) async.Stream[[]byte] {
 			n, err := conn.Read(buffer)
 			mux.RUnlock()
 			if err != nil {
-				ch <- async.NewErrorActionResult[[]byte](
-					NewErrNetConnection("failed to read from udp - %v", err),
-				)
+				ch <- async.Fail[[]byte](NewErrNetConnection("failed to read from udp - %v", err))
 				return
 			}
-			ch <- async.ActionResult[[]byte]{
-				Result: buffer[:n],
-				Error:  nil,
-			}
+			ch <- async.Success(buffer[:n])
 		}
 	}()
 	return ch
@@ -94,10 +88,7 @@ func (k *RoutingClient) notify(p Cemi) {
 	k.subMux.RLock()
 	defer k.subMux.RUnlock()
 	for sub := range k.subs {
-		sub <- async.ActionResult[Cemi]{
-			Result: p,
-			Error:  nil,
-		}
+		sub <- async.Success(p)
 	}
 }
 
@@ -120,7 +111,7 @@ func (k *RoutingClient) run(ctx context.Context) error {
 	}()
 	// Create Reader
 	reader := readUdp(&k.connMux, k.conn)
-	k.logger.Debugf("KnxRoutingClient(%s) listening...", k.multicastAddr)
+	slog.Debug("KnxRoutingClient listening...", slog.String("address", k.multicastAddr))
 	// Run
 	for {
 		select {
@@ -132,32 +123,32 @@ func (k *RoutingClient) run(ctx context.Context) error {
 				return data.Error
 			}
 			// Parse Header
-			header, _, err := parseKnxNetIpHeader(data.Result[:6])
+			header, _, err := parseKnxNetIpHeader(data.Value[:6])
 			if err != nil {
-				k.logger.Warningf("%v", err)
+				slog.Warn("failed to parse net header", slog.Any("error", err))
 				continue
 			}
 			// Process Package depending on ServiceType
 			switch header.ServiceType {
 			case SEARCH_REQUEST:
-				err = k.processSearchReq(data.Result)
+				err = k.processSearchReq(data.Value)
 			case SEARCH_RESPONSE:
-				err = k.processSearchRes(data.Result)
+				err = k.processSearchRes(data.Value)
 			case DESCRIPTION_REQUEST:
-				err = k.processDescriptionReq(data.Result)
+				err = k.processDescriptionReq(data.Value)
 			case DESCRIPTION_RESPONSE:
-				err = k.processDescriptionResp(data.Result)
+				err = k.processDescriptionResp(data.Value)
 			case ROUTING_INDICATION:
-				err = k.processRoutingIndication(data.Result)
+				err = k.processRoutingIndication(data.Value)
 			case ROUTING_LOST_MESSAGE:
-				err = k.processRoutingLostMsg(data.Result)
+				err = k.processRoutingLostMsg(data.Value)
 			case ROUTING_BUSY:
-				err = k.processRoutingBusy(data.Result)
+				err = k.processRoutingBusy(data.Value)
 			default:
 				continue // ignore
 			}
 			if err != nil {
-				k.logger.Warningf("%v", err)
+				slog.Warn("failed to process request", slog.Any("error", err))
 				continue
 			}
 		}
@@ -217,13 +208,12 @@ func WithRoutingClientRetryInterval(interval time.Duration) func(*RoutingClient)
 // Constructor
 // ------------------------------------------------------------------------------------
 
-func NewRoutingClient(ctx context.Context, logger log.ILogger, opts ...func(*RoutingClient)) IClient {
+func NewRoutingClient(ctx context.Context, opts ...func(*RoutingClient)) IClient {
 	c := &RoutingClient{
-		logger:        logger,
 		multicastAddr: "224.0.23.12:3671",
 		retryInterval: 30 * time.Second,
 		conn:          nil,
-		subs:          map[async.Stream[Cemi]]bool{},
+		subs:          map[async.Sequence[Cemi]]bool{},
 	}
 	for _, o := range opts {
 		o(c)
@@ -232,10 +222,10 @@ func NewRoutingClient(ctx context.Context, logger log.ILogger, opts ...func(*Rou
 		for {
 			err := c.run(ctx)
 			if err == nil {
-				logger.Debugf("RoutingClient shutdown successfully - context ended")
+				slog.Debug("RoutingClient shutdown successfully - context ended")
 				return // Context dead
 			}
-			logger.Errorf("%v", err)
+			slog.Error("KNX RoutingClient failed", slog.Any("error", err))
 			time.Sleep(c.retryInterval)
 		}
 	}()
