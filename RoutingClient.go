@@ -92,7 +92,7 @@ func (k *RoutingClient) notify(p Cemi) {
 	}
 }
 
-func (k *RoutingClient) run(ctx context.Context) error {
+func (k *RoutingClient) run(ctx context.Context, iface *net.Interface) error {
 	// Create UDP address
 	addr, err := net.ResolveUDPAddr("udp4", k.multicastAddr)
 	if err != nil {
@@ -208,7 +208,7 @@ func WithRoutingClientRetryInterval(interval time.Duration) func(*RoutingClient)
 // Constructor
 // ------------------------------------------------------------------------------------
 
-func NewRoutingClient(ctx context.Context, opts ...func(*RoutingClient)) IClient {
+func NewRoutingClient(ctx context.Context, iface *net.Interface, opts ...func(*RoutingClient)) IClient {
 	c := &RoutingClient{
 		multicastAddr: "224.0.23.12:3671",
 		retryInterval: 30 * time.Second,
@@ -220,7 +220,7 @@ func NewRoutingClient(ctx context.Context, opts ...func(*RoutingClient)) IClient
 	}
 	go func() {
 		for {
-			err := c.run(ctx)
+			err := c.run(ctx, iface)
 			if err == nil {
 				slog.Debug("RoutingClient shutdown successfully - context ended")
 				return // Context dead
