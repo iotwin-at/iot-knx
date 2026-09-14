@@ -111,7 +111,7 @@ func (k *RoutingClient) run(ctx context.Context, iface *net.Interface) error {
 	}()
 	// Create Reader
 	reader := readUdp(&k.connMux, k.conn)
-	slog.Debug("KnxRoutingClient listening...", slog.String("address", k.multicastAddr))
+	slog.Debug("KnxRoutingClient listening...", slog.String("interface", iface.Name), slog.String("address", k.multicastAddr))
 	// Run
 	for {
 		select {
