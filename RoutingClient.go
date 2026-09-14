@@ -99,7 +99,7 @@ func (k *RoutingClient) run(ctx context.Context, iface *net.Interface) error {
 		return NewErrAddressResolution("failed to create udp address for %s - %v", k.multicastAddr, err)
 	}
 	// Connect to multicast address
-	k.conn, err = net.ListenMulticastUDP("udp4", nil, addr)
+	k.conn, err = net.ListenMulticastUDP("udp4", iface, addr)
 	if err != nil {
 		return NewErrNetConnection("failed to listen on %s - %v", addr.String(), err)
 	}
